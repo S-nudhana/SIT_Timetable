@@ -1,18 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
-using TimeTable_Backend.Repository;
-using TimeTable_Backend.Data;
 using TimeTable_Backend.Models.Responses;
 using TimeTable_Backend.Mappers;
 using TimeTable_Backend.Dtos.Event;
 using TimeTable_Backend.Interfaces;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.AspNetCore.Authorization;
 
 namespace TimeTable_Backend.Controllers
 {
