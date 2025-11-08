@@ -1,0 +1,19 @@
+FROM oven/bun AS build
+
+WORKDIR /mnt
+
+COPY . .
+
+RUN bun install
+
+RUN bun run build
+
+FROM thistine/simple-http-server AS runner
+
+WORKDIR /mnt
+
+COPY --from=build /mnt/dist ./static
+
+ENTRYPOINT [ "/app/serviceapifrontend" ]
+
+EXPOSE 3000

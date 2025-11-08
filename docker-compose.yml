@@ -1,0 +1,31 @@
+services:
+  frontend:
+    container_name: TimeTable_Frontend
+    build:
+      context: ./TimeTable_Frontend
+      dockerfile: dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    container_name: TimeTable_Backend
+    build:
+      context: ./TimeTable_Backend
+      dockerfile: dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+    networks:
+      - app-network
+
+networks:
+  timetable-network:
+    driver: bridge

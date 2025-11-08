@@ -1,0 +1,40 @@
+https://chatgpt.com/c/690df9e4-d66c-8320-9e45-d47003966663
+
+Good question — No.
+add_course_table is just the migration name, not the table name.
+✅ What actually determines the table name?
+The C# model class name.
+Example:
+public class Course
+{
+    public int Id { get; set; }
+    public string CourseName { get; set; }
+}
+This will create a table named:
+Courses
+(by default EF Core pluralizes class names)
+✅ What does dotnet ef migrations add add_course_table do?
+This command creates a migration file like:
+20231107_add_course_table.cs
+Inside that file EF Core writes SQL changes (like CREATE TABLE Courses (...);).
+It is only a description name so later you know what change this migration represents.
+So…
+Thing	Example	Purpose
+Migration Name	add_course_table	Just a label for you and EF history
+Model Class Name	Course	Defines the C# structure
+Table Name	Courses	EF Core generates this from model name
+If you want to customize table name, you can:
+using System.ComponentModel.DataAnnotations.Schema;
+
+[Table("CourseTable")] // custom table name
+public class Course
+{
+    public int Id { get; set; }
+    public string CourseName { get; set; }
+}
+Now the table will be named:
+CourseTable
+TL;DR
+add_course_table → ✅ migration name (just a label)
+Course class → ✅ defines schema
+Table will be → Courses (or custom if you set [Table("")])
