@@ -19,12 +19,12 @@ namespace TimeTable_Backend.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly ApplicationDBContext _dbContext;
+        private readonly IUserRepository _UserRepository;
         private readonly bool _isProduction;
         private readonly ITokenService _tokenService;
-        public UserController(ApplicationDBContext dbContext, IConfiguration conf, ITokenService tokenService)
+        public UserController(IConfiguration conf, ITokenService tokenService, IUserRepository userRepository)
         {
-            _dbContext = dbContext;
+            _UserRepository = userRepository;
             _isProduction = conf.GetValue<bool>("AppSettings:Production");
             _tokenService = tokenService;
         }
@@ -44,10 +44,19 @@ namespace TimeTable_Backend.Controllers
                     });
                 }
                 var newUser = req.ToUserRegisterRequestDto();
+                var existingUser = await _UserRepository.FindUserByEmailAsync(newUser.Email);
+                if (existingUser != null)
+                {
+                    return Conflict(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "อีเมลนี้ถูกใช้งานแล้ว",
+                        Data = null
+                    });
+                }
                 var passwordHasher = new PasswordHasher<User>();
                 newUser.Password = passwordHasher.HashPassword(newUser, newUser.Password);
-                await _dbContext.User.AddAsync(newUser);
-                await _dbContext.SaveChangesAsync();
+                await _UserRepository.CreateUserAsync(newUser);
                 return Ok(new ApiResponse<object>
                 {
                     Success = true,
@@ -81,7 +90,7 @@ namespace TimeTable_Backend.Controllers
                     });
                 }
                 var userRequest = req.ToUserLoginRequestDto();
-                var existingUser = await _dbContext.User.FirstOrDefaultAsync(u => u.Email == userRequest.Email);
+                var existingUser = await _UserRepository.FindUserByEmailAsync(userRequest.Email);
                 if (existingUser == null)
                 {
                     return Unauthorized(new ApiResponse<object>
