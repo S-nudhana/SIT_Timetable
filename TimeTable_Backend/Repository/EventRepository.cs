@@ -25,6 +25,18 @@ namespace TimeTable_Backend.Repository
             return newEvent;
         }
 
+        public async Task<bool> DeleteEventAsync(int id)
+        {
+            var eventData = await _dbContext.Event.FirstOrDefaultAsync(e => e.ID == id);
+            if (eventData == null)
+            {
+                return false;
+            }
+            _dbContext.Event.Remove(eventData);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<List<Event>> GetAllEventsAsync()
         {
             return await _dbContext.Event.ToListAsync();
