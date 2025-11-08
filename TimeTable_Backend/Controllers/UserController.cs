@@ -11,6 +11,7 @@ using TimeTable_Backend.Models.Responses;
 using TimeTable_Backend.Mappers;
 using TimeTable_Backend.models;
 using Microsoft.EntityFrameworkCore;
+using TimeTable_Backend.Interfaces;
 
 namespace TimeTable_Backend.Controllers
 {
@@ -19,9 +20,13 @@ namespace TimeTable_Backend.Controllers
     public class UserController : ControllerBase
     {
         private readonly ApplicationDBContext _dbContext;
-        public UserController(ApplicationDBContext dbContext)
+        private readonly bool _isProduction;
+        private readonly ITokenService _tokenService;
+        public UserController(ApplicationDBContext dbContext, IConfiguration conf, ITokenService tokenService)
         {
             _dbContext = dbContext;
+            _isProduction = conf.GetValue<bool>("AppSettings:Production");
+            _tokenService = tokenService;
         }
 
         [HttpPost("register")]
@@ -69,7 +74,7 @@ namespace TimeTable_Backend.Controllers
                     });
                 }
                 var hasher = new PasswordHasher<User>();
-                var result = hasher.VerifyHashedPassword(userRequest, existingUser.Password, userRequest.Password);
+                var result = hasher.VerifyHashedPassword(existingUser, existingUser.Password, req.Password);
                 if (result == PasswordVerificationResult.Failed)
                 {
                     return Unauthorized(new ApiResponse<object>
@@ -79,7 +84,13 @@ namespace TimeTable_Backend.Controllers
                         Data = null
                     });
                 }
-
+                var token = _tokenService.CreateToken(existingUser);
+                Response.Cookies.Append("Token", token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = _isProduction,
+                    Expires = DateTimeOffset.UtcNow.AddDays(7)
+                });
                 return Ok(new ApiResponse<object>
                 {
                     Success = true,
@@ -92,7 +103,7 @@ namespace TimeTable_Backend.Controllers
                 return StatusCode(500, new ApiResponse<object>
                 {
                     Success = false,
-                    Message = "ไม่สามารถสร้างผู้ใช้ได้",
+                    Message = "ไม่สามารถเข้าสู่ระบบได้",
                     Data = null
                 });
             }

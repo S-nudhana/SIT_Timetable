@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TimeTable_Backend.Data;
 using TimeTable_Backend.Interfaces;
 using TimeTable_Backend.Repository;
+using TimeTable_Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,7 @@ builder.Services.AddDbContext<ApplicationDBContext>(options =>
 
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 var app = builder.Build();
 
