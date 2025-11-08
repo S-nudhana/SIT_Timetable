@@ -34,6 +34,15 @@ namespace TimeTable_Backend.Controllers
         {
             try
             {
+                if(!ModelState.IsValid)
+                {
+                    return BadRequest(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)),
+                        Data = null
+                    });
+                }
                 var newUser = req.ToUserRegisterRequestDto();
                 var passwordHasher = new PasswordHasher<User>();
                 newUser.Password = passwordHasher.HashPassword(newUser, newUser.Password);
@@ -62,6 +71,15 @@ namespace TimeTable_Backend.Controllers
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = string.Join(" และ ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)),
+                        Data = null
+                    });
+                }
                 var userRequest = req.ToUserLoginRequestDto();
                 var existingUser = await _dbContext.User.FirstOrDefaultAsync(u => u.Email == userRequest.Email);
                 if (existingUser == null)
@@ -94,7 +112,7 @@ namespace TimeTable_Backend.Controllers
                 return Ok(new ApiResponse<object>
                 {
                     Success = true,
-                    Message = "สร้างผู้ใช้สำเร็จ",
+                    Message = "เข้าสู่ระบบสำเร็จ",
                     Data = null
                 });
             }

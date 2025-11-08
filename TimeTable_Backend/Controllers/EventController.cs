@@ -11,6 +11,8 @@ using TimeTable_Backend.Models.Responses;
 using TimeTable_Backend.Mappers;
 using TimeTable_Backend.Dtos.Event;
 using TimeTable_Backend.Interfaces;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TimeTable_Backend.Controllers
 {
@@ -26,7 +28,7 @@ namespace TimeTable_Backend.Controllers
             _UserRepository = userRepository;
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetEventByID([FromRoute] int id)
         {
             try
@@ -92,11 +94,30 @@ namespace TimeTable_Backend.Controllers
             }
         }
 
-        [HttpPost("{uid}")]
-        public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequestDto req, [FromRoute] Guid uid)
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequestDto req)
         {
             try
             {
+                var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "ID");
+                if (userIdClaim == null)
+                    return Unauthorized(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "ไม่พบข้อมูลผู้ใช้",
+                        Data = null
+                    });
+                Guid uid = Guid.Parse(userIdClaim.Value);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)),
+                        Data = null
+                    });
+                }
                 var user = await _UserRepository.GetUserByIDAsync(uid);
                 if (user == null)
                     return BadRequest("User not found");
@@ -116,6 +137,40 @@ namespace TimeTable_Backend.Controllers
                 {
                     Success = false,
                     Message = "ไม่สามารถสร้างกิจกรรมได้",
+                    Data = null
+                });
+            }
+        }
+
+        [Authorize]
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> DeleteEvent([FromRoute] int id)
+        {
+            try
+            {
+                var status = await _EventRepository.DeleteEventAsync(id);
+                if (!status)
+                {
+                    return NotFound(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "ไม่พบกิจกรรมที่ต้องการลบ",
+                        Data = null
+                    });
+                }
+                return Ok(new ApiResponse<object>
+                {
+                    Success = true,
+                    Message = "ลบกิจกรรมสำเร็จ",
+                    Data = null
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "ไม่สามารถลบกิจกรรมได้",
                     Data = null
                 });
             }
