@@ -1,5 +1,4 @@
-using System.Text.Json.Serialization;
-using TimeTable_Backend.Dtos.Event;
+using TimeTable_Backend.Dtos.EventDto;
 using TimeTable_Backend.models;
 
 namespace TimeTable_Backend.Mappers
@@ -25,7 +24,28 @@ namespace TimeTable_Backend.Mappers
                 CoverImagePath = e.CoverImagePath,
                 BannerImagePath = e.BannerImagePath,
                 CreatorUID = uid,
-                Creator = usr
+                Creator = usr,
+            };
+        }
+
+        public static EventTimelineDto ToEventTimelineDto(this Event e, List<Timeline> t)
+        {
+            return new EventTimelineDto
+            {
+                Event = e.ToEventDetailDto(),
+                Timelines = t,
+            };
+        }
+
+        public static Event ToUpdateEventRequestDto(this UpdateEventRequestDto e, User usr, Guid? uid)
+        {
+            return new Event
+            {
+                Title = e.Title,
+                CoverImagePath = e.CoverImagePath,
+                BannerImagePath = e.BannerImagePath,
+                CreatorUID = uid,
+                Creator = usr,
             };
         }
     }
