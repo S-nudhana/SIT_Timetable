@@ -28,6 +28,7 @@ builder.Services.AddDbContext<ApplicationDBContext>(options =>
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ITimelineRepository, TimelineRepository>();
 
 builder.Services.AddAuthentication(options =>
 {

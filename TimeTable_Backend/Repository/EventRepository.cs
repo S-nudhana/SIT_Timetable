@@ -14,11 +14,11 @@ namespace TimeTable_Backend.Repository
             _dbContext = dbContext;
         }
 
-        public async Task<Event> CreateEventAsync(Event newEvent)
+        public async Task<int> CreateEventAsync(Event newEvent)
         {
             await _dbContext.Event.AddAsync(newEvent);
             await _dbContext.SaveChangesAsync();
-            return newEvent;
+            return newEvent.ID;
         }
 
         public async Task<bool> DeleteEventAsync(int id)
@@ -41,6 +41,18 @@ namespace TimeTable_Backend.Repository
         public async Task<Event?> GetEventByIDAsync(int id)
         {
             return await _dbContext.Event.FindAsync(id);
+        }
+
+        public async Task<int> UpdateEventAsync(Event updatedEvent, int id)
+        {
+            var eventData = await _dbContext.Event.FirstOrDefaultAsync(e => e.ID == id);
+            if(eventData != null)
+            {
+                eventData = updatedEvent;
+                await _dbContext.SaveChangesAsync();
+                return updatedEvent.ID;
+            }
+            return -1;
         }
     }
 }

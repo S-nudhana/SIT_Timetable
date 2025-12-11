@@ -1,4 +1,5 @@
 namespace TimeTable_Backend.models
+
 {
     public class User
     {
