@@ -98,12 +98,14 @@ namespace TimeTable_Backend.Controllers
             {
                 var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "ID");
                 if (userIdClaim == null)
+                {
                     return Unauthorized(new ApiResponse<object>
                     {
                         Success = false,
                         Message = "ไม่พบข้อมูลผู้ใช้",
                         Data = null
                     });
+                }
                 Guid uid = Guid.Parse(userIdClaim.Value);
                 if (!ModelState.IsValid)
                 {
@@ -241,10 +243,10 @@ namespace TimeTable_Backend.Controllers
                         Success = false,
                         Message = "แก้ไขข้อมูลตารางเวลาผิดพลาด",
                         Data = null
-                    });       
+                    });
                 }
-                var timeline = req.Timelines.Select(t => t.ToUpdateTimelineRequestDto()).ToList();
-                bool result = await _TimelineRepository.UpdateTimelineAsync(timeline);
+                var timelines = req.Timelines.Select(t => t.ToUpdateTimelineRequestDto()).ToList();
+                bool result = await _TimelineRepository.UpdateTimelineAsync(timelines);
                 return Ok(new ApiResponse<object>
                 {
                     Success = true,

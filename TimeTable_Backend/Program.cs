@@ -1,7 +1,5 @@
 using System.Text;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using TimeTable_Backend.Data;
@@ -10,6 +8,27 @@ using TimeTable_Backend.Repository;
 using TimeTable_Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var allowedOrigins = new[]
+{
+    builder.Configuration["Origins:Frontend"]
+};
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DynamicCors", policy =>
+    {
+        policy
+            .SetIsOriginAllowed(origin =>
+            {
+                return !string.IsNullOrEmpty(origin) &&
+                       allowedOrigins.Contains(origin);
+            })
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
 builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
 {
@@ -29,6 +48,9 @@ builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ITimelineRepository, TimelineRepository>();
+
+var jwtSigningKey = builder.Configuration["JWT:SigningKey"]
+    ?? throw new InvalidOperationException("JWT:SigningKey is missing from configuration.");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -51,7 +73,7 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:SigningKey"])),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningKey)),
         ValidateIssuer = true,
         ValidIssuer = builder.Configuration["JWT:Issuer"],
         ValidateAudience = true,
@@ -66,7 +88,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
+app.UseCors("DynamicCors");
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

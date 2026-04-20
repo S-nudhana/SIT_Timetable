@@ -15,7 +15,8 @@ namespace TimeTable_Backend.Services
         public TokenService(IConfiguration conf)
         {
             _conf = conf;
-            _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_conf["JWT:SigningKey"]));
+            var signingKey = _conf["JWT:SigningKey"] ?? throw new InvalidOperationException("JWT:SigningKey is not configured.");
+            _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey));
         }
 
         public string CreateToken(User user)
