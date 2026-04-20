@@ -30,5 +30,17 @@ namespace TimeTable_Backend.Repository
         {
             return await _dbContext.User.FindAsync(uid);
         }
+
+        public async Task<bool> DeleteUserAsync (Guid uid)
+        {
+            var userData = await _dbContext.User.FirstOrDefaultAsync(e => e.ID == uid);
+            if (userData == null)
+            {
+                return false;                
+            }
+            _dbContext.User.Remove(userData);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
     }
 }

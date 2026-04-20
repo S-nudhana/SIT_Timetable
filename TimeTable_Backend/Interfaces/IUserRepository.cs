@@ -7,5 +7,6 @@ namespace TimeTable_Backend.Interfaces
         Task<User?> GetUserByIDAsync(Guid uid);
         Task<User?> FindUserByEmailAsync(string email);
         Task<User?> CreateUserAsync(User newUser);
+        Task<bool> DeleteUserAsync(Guid uid);
     }
 }

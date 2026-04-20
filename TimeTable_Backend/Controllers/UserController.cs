@@ -6,6 +6,7 @@ using TimeTable_Backend.Models.Responses;
 using TimeTable_Backend.Mappers;
 using TimeTable_Backend.models;
 using TimeTable_Backend.Interfaces;
+using System.Runtime.InteropServices;
 
 namespace TimeTable_Backend.Controllers
 {
@@ -28,7 +29,7 @@ namespace TimeTable_Backend.Controllers
         {
             try
             {
-                if(!ModelState.IsValid)
+                if (!ModelState.IsValid)
                 {
                     return BadRequest(new ApiResponse<object>
                     {
@@ -125,6 +126,117 @@ namespace TimeTable_Backend.Controllers
                 {
                     Success = false,
                     Message = "ไม่สามารถเข้าสู่ระบบได้",
+                    Data = null
+                });
+            }
+        }
+        [HttpDelete("delete")]
+        public async Task<IActionResult> RemoveUser()
+        {
+            try
+            {
+                var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "ID");
+                if (userIdClaim == null)
+                {
+                    return Unauthorized(new ApiResponse<Object>
+                    {
+                        Success = false,
+                        Message = "ไม่พบข้อมูลผู้ใช้",
+                        Data = null
+                    });
+                }
+                Guid uid = Guid.Parse(userIdClaim.Value);
+                var user = await _UserRepository.GetUserByIDAsync(uid);
+                if (user == null)
+                    return BadRequest("ไม่พบผู้ใช้");
+
+                var deleteEventStatus = await _UserRepository.DeleteUserAsync(uid);
+                if (!deleteEventStatus)
+                {
+                    return StatusCode(500, new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "ลบบัญชีผิดพลาด",
+                        Data = null
+                    });
+                }
+                return Ok(new ApiResponse<object>
+                {
+                    Success = true,
+                    Message = "ลบบัญชีสำเร็จ",
+                    Data = null
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "ไม่สามารถลบบัญชีได้",
+                    Data = null
+                });
+            }
+        }
+        [HttpGet("authorize")]
+        public async Task<IActionResult> Authorize()
+        {
+            try
+            {
+                var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "ID");
+                if (userIdClaim == null)
+                {
+                    return Unauthorized(new ApiResponse<Object>
+                    {
+                        Success = false,
+                        Message = "ไม่พบข้อมูลผู้ใช้",
+                        Data = null
+                    });
+                }
+                Guid uid = Guid.Parse(userIdClaim.Value);
+                var user = await _UserRepository.GetUserByIDAsync(uid);
+                if (user == null)
+                    return BadRequest("ไม่พบผู้ใช้");
+
+                return Ok(new ApiResponse<object>
+                {
+                    Success = true,
+                    Message = "อนุญาตให้เข้าถึงได้",
+                    Data = new
+                    {
+                        Authorized = true,
+                        UserFirstname = user.Firstname
+                    }
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "ไม่สามารถตรวจสอบสิทธิ์ได้",
+                    Data = null
+                });
+            }
+        }
+        [HttpGet("logout")]
+        public IActionResult Logout()
+        {
+            try
+            {
+                Response.Cookies.Delete("Token");
+                return Ok(new ApiResponse<object>
+                {
+                    Success = true,
+                    Message = "ออกจากระบบสำเร็จ",
+                    Data = null
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "ไม่สามารถออกจากระบบได้",
                     Data = null
                 });
             }

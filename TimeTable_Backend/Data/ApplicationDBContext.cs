@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using TimeTable_Backend.models;
-using TimeTable_Backend.Models;
 
 namespace TimeTable_Backend.Data
 {
