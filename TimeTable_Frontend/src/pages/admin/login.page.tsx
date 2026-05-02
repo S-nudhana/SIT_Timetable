@@ -2,7 +2,7 @@ import { Input, Button, Flex, Box, Image, Text } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-import Logo from "../../../public/assets/30SIT.png";
+import Logo from "/assets/30SIT.png";
 
 import { Login } from "../../services/apis/auth.service";
 import { loginSchema } from "../../schema/auth.schema";

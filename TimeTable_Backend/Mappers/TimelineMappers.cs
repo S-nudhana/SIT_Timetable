@@ -10,9 +10,6 @@ namespace TimeTable_Backend.Mappers
             return new Timeline
             {
                 Title = t.Title,
-                Speaker = t.Speaker,
-                Place = t.Place,
-                Date = t.Date,
                 StartTime = t.StartTime,
                 EndTime = t.EndTime,
                 EventID = eventID
@@ -25,9 +22,6 @@ namespace TimeTable_Backend.Mappers
             {
                 ID = t.ID,
                 Title = t.Title,
-                Speaker = t.Speaker,
-                Place = t.Place,
-                Date = t.Date,
                 StartTime = t.StartTime,
                 EndTime = t.EndTime,
                 EventID = t.EventID,

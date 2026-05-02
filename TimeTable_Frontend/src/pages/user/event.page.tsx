@@ -3,13 +3,13 @@ import { useParams } from "react-router-dom";
 import { FiMapPin, FiClock } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
-import Navbar from "../../components/navbar.components";
-import Footer from "../../components/footer.components";
+import Navbar from "../../components/navbar.component";
+import Footer from "../../components/footer.component";
 import BackButton from "../../components/backButton.component";
 import { ongoingEvents, upcomingEvents } from "../../data/event.mockup";
 import { formatThaiTime, formatTimeRange } from "../../utils/event.format";
 
-export default function EventDetailPage() {
+export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
   const allEvents = [...ongoingEvents, ...upcomingEvents];
   const event = allEvents.find((e) => e.id === Number(id));

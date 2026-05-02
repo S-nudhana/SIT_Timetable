@@ -37,9 +37,6 @@ namespace TimeTable_Backend.Repository
                 }
                 
                 existingTimeline.Title = timeline.Title;
-                existingTimeline.Speaker = timeline.Speaker;
-                existingTimeline.Place = timeline.Place;
-                existingTimeline.Date = timeline.Date;
                 existingTimeline.StartTime = timeline.StartTime;
                 existingTimeline.EndTime = timeline.EndTime;
                 existingTimeline.EventID = timeline.EventID;
