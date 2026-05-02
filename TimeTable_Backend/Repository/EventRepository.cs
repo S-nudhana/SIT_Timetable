@@ -23,19 +23,32 @@ namespace TimeTable_Backend.Repository
 
         public async Task<bool> DeleteEventAsync(int id)
         {
-            var eventData = await _dbContext.Event.FirstOrDefaultAsync(e => e.ID == id);
+            var eventData = await _dbContext.Event
+                .Include(e => e.Timelines)
+                .FirstOrDefaultAsync(e => e.ID == id);
             if (eventData == null)
             {
                 return false;
             }
+            if (eventData.Timelines != null)
+            {
+                _dbContext.Timeline.RemoveRange(eventData.Timelines);
+            }
             _dbContext.Event.Remove(eventData);
+
             await _dbContext.SaveChangesAsync();
             return true;
         }
 
         public async Task<List<Event>> GetAllEventsAsync()
         {
-            return await _dbContext.Event.ToListAsync();
+            var now = DateTime.UtcNow;
+
+            return await _dbContext.Event
+                .Include(e => e.Creator)
+                .Include(e => e.Timelines)
+                .Where(e => e.Timelines != null && e.Timelines.Any(t => t.EndTime >= now))
+                .ToListAsync();
         }
 
         public async Task<Event?> GetEventByIDAsync(int id)
@@ -46,7 +59,7 @@ namespace TimeTable_Backend.Repository
         public async Task<int> UpdateEventAsync(Event updatedEvent, int id)
         {
             var eventData = await _dbContext.Event.FirstOrDefaultAsync(e => e.ID == id);
-            if(eventData != null)
+            if (eventData != null)
             {
                 eventData = updatedEvent;
                 await _dbContext.SaveChangesAsync();

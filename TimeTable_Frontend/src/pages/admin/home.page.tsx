@@ -1,22 +1,50 @@
 import { Box, Flex, Text, Button, Input, InputGroup, Table, Dialog, CloseButton, Portal } from "@chakra-ui/react"
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
-import Navbar from "../../components/navbar.components"
-import Footer from "../../components/footer.components";
-import { ongoingEvents, upcomingEvents } from "../../data/event.mockup";
+import Navbar from "../../components/navbar.component"
+import Footer from "../../components/footer.component";
 import { formatThaiDate } from "../../utils/event.format";
+import { getAdminEventListApi, deleteEventApi } from "../../services/apis/event.service";
 
 import { AiFillDelete } from "react-icons/ai";
 import { FiPlus, FiSearch, FiEdit3 } from "react-icons/fi";
+import type { EventItem } from "../../types/event.type";
 
-export default function Home() {
-    const data = [...ongoingEvents, ...upcomingEvents];
-    const handleDelete = (id: number) => {
-        console.log("Delete:", id);
-    };
+export default function HomePage() {
+    const navigate = useNavigate();
+    const [eventData, setEventData] = useState<EventItem[]>([]);
+
+    async function handleDelete(id: number) {
+        try {
+            const res = await deleteEventApi(id);
+            if (res.status === 200) {
+                setEventData((prev) => prev.filter((e) => e.id !== id));
+            }
+        } catch (error) {
+            console.error("Error deleting event:", error);
+        }
+    }
+
+    async function eventQuery() {
+        try {
+            const res = await getAdminEventListApi();
+            if (res.status === 200) {
+                setEventData(res.data.data)
+            }
+        } catch (error) {
+            console.error("Error fetching events:", error);
+        }
+    }
+
+    useEffect(() => {
+        eventQuery();
+    }, []);
+
     return (
         <Box>
             <Navbar />
-            <Box w={{ base: "90%", md: "85%", xl: "70%" }} display={"flex"} flexDirection={"column"} margin={"0 auto"} mt={"10px"} mb={"50px"}>
+            <Box w={{ base: "90%", md: "85%", xl: "70%" }} minH={"80dvh"} display={"flex"} flexDirection={"column"} margin={"0 auto"} mt={"10px"} mb={"50px"}>
                 <Flex pt={"50px"} justify={"center"}>
                     <Text fontSize={{ base: "26px", lg: "32px" }} fontWeight={"600"}>
                         แดชบอร์ด
@@ -35,10 +63,10 @@ export default function Home() {
                         </InputGroup>
                         <Button p="7px 13px" bg={"#0C86FE"} borderRadius={"10px"} _hover={{
                             backgroundColor: "#0a68c7"
-                        }}><FiPlus />เพิ่มกิจกรรม</Button>
+                        }} onClick={() => navigate("/admin/create")}><FiPlus />เพิ่มกิจกรรม</Button>
                     </Flex>
                 </Flex>
-                <Table.Root size="lg" variant={"outline"} mt={"20px"} borderRadius={"10px"}>
+                <Table.Root size="md" variant={"outline"} mt={"20px"} borderRadius={"10px"}>
                     <Table.Header>
                         <Table.Row>
                             <Table.ColumnHeader py={"10px"} pl={"20px"}>ชื่อกิจกรรม</Table.ColumnHeader>
@@ -49,13 +77,19 @@ export default function Home() {
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                        {data.map((item) => (
+                        {eventData.length === 0 ? (
+                            <Table.Row>
+                                <Table.Cell colSpan={5} py={"40px"} textAlign={"center"} color={"gray.400"} fontSize={"16px"}>
+                                    ไม่มีกิจกรรมในขณะนี้
+                                </Table.Cell>
+                            </Table.Row>
+                        ) : (eventData.map((item) => (
                             <Table.Row key={item.id}>
                                 <Table.Cell py={"5px"} pl={"20px"} w={{ base: "25%", md: "auto" }} pr={"9px"} verticalAlign="middle">{item.title}</Table.Cell>
-                                <Table.Cell py={"5px"} w={{ base: "25%", md: "auto" }} pr={"9px"} verticalAlign="middle">{formatThaiDate(item.startDate)} - {formatThaiDate(item.endDate)}</Table.Cell>
-                                <Table.Cell py={"10px"} display={{ base: "none", md: "flex" }} verticalAlign="middle"> Nudhana Sarutipaisan </Table.Cell>
-                                <Table.Cell py={"5px"} w={{ base: "12%", md: "auto" }} verticalAlign="middle"> <Button size={"sm"} px={{ base: "0px", md: "20px" }} bg={"#d6d6d6"} color={"black"} borderRadius={"10px"} _hover={{
-                                    backgroundColor: "#bfbfbf"
+                                <Table.Cell py={"5px"} w={{ base: "25%", md: "auto" }} pr={"9px"} verticalAlign="middle">{formatThaiDate(new Date(item.startDate))} - {formatThaiDate(new Date(item.endDate))}</Table.Cell>
+                                <Table.Cell py={"10px"} display={{ base: "none", md: "flex" }} verticalAlign="middle"> {item.creatorName} </Table.Cell>
+                                <Table.Cell py={"5px"} w={{ base: "12%", md: "auto" }} verticalAlign="middle"> <Button onClick={() => navigate(`/admin/edit/${item.id}`)} size={"sm"} px={{ base: "0px", md: "20px" }} bg={"#e6e6e6"} color={"black"} borderRadius={"10px"} _hover={{
+                                    backgroundColor: "#d8d8d8"
                                 }}><FiEdit3 /> <Text display={{ base: "none", md: "flex" }}>แก้ไข</Text></Button> </Table.Cell>
                                 <Table.Cell py={"5px"} w={{ base: "12%", md: "auto" }} verticalAlign="middle">
                                     <Dialog.Root placement="center">
@@ -108,7 +142,7 @@ export default function Home() {
                                         </Portal>
                                     </Dialog.Root></Table.Cell>
                             </Table.Row>
-                        ))}
+                        )))}
                     </Table.Body>
                 </Table.Root>
             </Box>
@@ -116,3 +150,5 @@ export default function Home() {
         </Box>
     )
 }
+
+

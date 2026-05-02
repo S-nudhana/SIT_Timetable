@@ -1,8 +1,10 @@
 import { createBrowserRouter } from "react-router-dom";
 import Home from "../pages/user/home.page";
 import AdminHome from "../pages/admin/home.page";
+import CreateEvent from "../pages/admin/createEvent.page";
+import EditEvent from "../pages/admin/editEvent.page";
 import Login from "../pages/admin/login.page";
-import EventDetailPage from "../pages/user/event.page";
+import EventDetail from "../pages/user/event.page";
 import ProtectedRoute from "../middlewares/ProtectedRoute.middleware";
 import PublicRoute from "../middlewares/PublicRoute.middleware";
 
@@ -11,7 +13,7 @@ export const router = createBrowserRouter([
         path: "/event/:id",
         element: (
             <PublicRoute>
-                <EventDetailPage />
+                <EventDetail />
             </PublicRoute>
         ),
     },
@@ -39,4 +41,20 @@ export const router = createBrowserRouter([
             </ProtectedRoute>
         ),
     },
+    {
+        path: "/admin/create",
+        element: (
+            <ProtectedRoute>
+                <CreateEvent />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: "/admin/edit/:id",
+        element: (
+            <ProtectedRoute>
+                <EditEvent />
+            </ProtectedRoute>
+        ),
+    }
 ]);

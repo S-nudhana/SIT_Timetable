@@ -28,7 +28,6 @@ namespace TimeTable_Backend.Controllers
             try
             {
                 var eventData = await _EventRepository.GetEventByIDAsync(id);
-                var timelineData = await _TimelineRepository.GetAllTimelinesByIDAsync(id);
                 if (eventData == null)
                 {
                     return NotFound(new ApiResponse<object>
@@ -38,7 +37,11 @@ namespace TimeTable_Backend.Controllers
                         Data = null
                     });
                 }
-                EventTimelineDto result = eventData.ToEventTimelineDto(timelineData);
+
+                var timelineData = await _TimelineRepository.GetAllTimelinesByIDAsync(id);
+                // Fixed: use the correct mapper name ToAdminEventTimelineDto
+                AdminEventTimelineDto result = eventData.ToAdminEventTimelineDto(timelineData);
+
                 return Ok(new ApiResponse<object>
                 {
                     Success = true,
@@ -91,7 +94,41 @@ namespace TimeTable_Backend.Controllers
         }
 
         [Authorize]
-        [HttpPost]
+        [HttpGet("admin")]
+        public async Task<IActionResult> GetAdminEvents()
+        {
+            try
+            {
+                var eventData = (await _EventRepository.GetAllEventsAsync()).Select(e => e.ToAdminEventDetailDto());
+                if (eventData == null)
+                {
+                    return NotFound(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "ไม่พบกิจกรรมที่ร้องขอ",
+                        Data = null
+                    });
+                }
+                return Ok(new ApiResponse<object>
+                {
+                    Success = true,
+                    Message = "โหลดกิจกรรมสำเร็จ",
+                    Data = eventData
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "เกิดข้อผิดพลาดในการโหลดกิจกรรม",
+                    Data = null
+                });
+            }
+        }
+
+        [Authorize]
+        [HttpPost("admin")]
         public async Task<IActionResult> CreateEvent([FromBody] CreateEventRequestDto req)
         {
             try
@@ -200,6 +237,7 @@ namespace TimeTable_Backend.Controllers
                         Message = "ไม่พบข้อมูลผู้ใช้",
                         Data = null
                     });
+
                 Guid uid = Guid.Parse(userIdClaim.Value);
                 if (!ModelState.IsValid)
                 {
@@ -210,9 +248,15 @@ namespace TimeTable_Backend.Controllers
                         Data = null
                     });
                 }
+
                 var user = await _UserRepository.GetUserByIDAsync(uid);
                 if (user == null)
-                    return BadRequest("ไม่พบผู้ใช้");
+                    return BadRequest(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "ไม่พบผู้ใช้",
+                        Data = null
+                    });
 
                 var existingEvent = await _EventRepository.GetEventByIDAsync(id);
                 if (existingEvent == null)
@@ -225,6 +269,7 @@ namespace TimeTable_Backend.Controllers
                     });
                 }
 
+                // Update event fields
                 var editedEvent = req.ToUpdateEventRequestDto(user, uid);
                 var eventID = await _EventRepository.UpdateEventAsync(editedEvent, id);
                 if (eventID == -1)
@@ -236,17 +281,23 @@ namespace TimeTable_Backend.Controllers
                         Data = null
                     });
                 }
+
                 if (req.Timelines == null)
                 {
                     return StatusCode(500, new ApiResponse<object>
                     {
                         Success = false,
-                        Message = "แก้ไขข้อมูลตารางเวลาผิดพลาด",
+                        Message = "ไม่พบข้อมูลตารางเวลา",
                         Data = null
                     });
                 }
-                var timelines = req.Timelines.Select(t => t.ToUpdateTimelineRequestDto()).ToList();
-                bool result = await _TimelineRepository.UpdateTimelineAsync(timelines);
+                await _TimelineRepository.DeleteTimelineAsync(id);
+                foreach (var timeline in req.Timelines)
+                {
+                    var newTimeline = timeline.ToCreateTimelineRequestDto(id);
+                    await _TimelineRepository.CreateTimelineAsync(newTimeline);
+                }
+
                 return Ok(new ApiResponse<object>
                 {
                     Success = true,
